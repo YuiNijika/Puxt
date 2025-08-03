@@ -18,7 +18,7 @@ export const userApi = {
      */
     getUserInfo: (action = 'get') => {
         const params = action !== 'get' ? { action } : {}
-        return apiService.get('user', params)
+        return apiService.get('user/info', params)
     },
 
     /**
@@ -29,7 +29,7 @@ export const userApi = {
      */
     updateUser: (userData, action = 'put') => {
         const actionParam = action !== 'put' ? action : null
-        return apiService.put('user', userData, actionParam)
+        return apiService.put('user/info', userData, actionParam)
     }
 }
 

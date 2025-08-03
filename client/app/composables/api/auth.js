@@ -17,7 +17,7 @@ export const authApi = {
      */
     checkLogin: (action = 'get') => {
         const params = action !== 'get' ? { action } : {}
-        return apiService.get('check-login', params)
+        return apiService.get('auth/check-login', params)
     },
 
     /**
@@ -28,7 +28,7 @@ export const authApi = {
      */
     login: (credentials, action = 'post') => {
         const actionParam = action !== 'post' ? action : null
-        return apiService.post('login', credentials, actionParam)
+        return apiService.post('auth/login', credentials, actionParam)
     },
 
     /**
@@ -38,7 +38,7 @@ export const authApi = {
      */
     logout: (action = 'post') => {
         const actionParam = action !== 'post' ? action : null
-        return apiService.post('logout', {}, actionParam)
+        return apiService.post('auth/logout', {}, actionParam)
     }
 }
 

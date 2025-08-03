@@ -12,30 +12,30 @@ $routeConfigs = [
     ],
     // API路由
     [
-        'route' => 'api/login',
+        'route' => 'api/auth/login',
         'handler' => function () {
-            Anon_Router::View('Login');
+            Anon_Router::View('Auth/Login');
         },
         'useLoginCheck' => false,
     ],
     [
-        'route' => 'api/logout',
+        'route' => 'api/auth/logout',
         'handler' => function () {
-            Anon_Router::View('Logout');
+            Anon_Router::View('Auth/Logout');
         },
         'useLoginCheck' => false,
     ],
     [
-        'route' => 'api/check-login',
+        'route' => 'api/auth/check-login',
         'handler' => function () {
-            Anon_Router::View('CheckLogin');
+            Anon_Router::View('Auth/CheckLogin');
         },
         'useLoginCheck' => false,
     ],
     [
-        'route' => 'api/user',
+        'route' => 'api/user/info',
         'handler' => function () {
-            Anon_Router::View('User');
+            Anon_Router::View('User/Info');
         },
         'useLoginCheck' => true,
     ],
