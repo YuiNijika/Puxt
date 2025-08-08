@@ -9,7 +9,7 @@ class Anon_Main
 {
     public static function run()
     {
-        $App  = __DIR__ . '/../App/';
+        $App  = __DIR__ . '/../app/';
         $Server  = __DIR__ . '/Server/';
         $Modules = __DIR__ . '/Modules/';
         require_once $Modules . 'Config.php';
