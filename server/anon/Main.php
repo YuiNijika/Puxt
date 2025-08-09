@@ -10,11 +10,11 @@ class Anon_Main
     public static function run()
     {
         $App  = __DIR__ . '/../app/';
-        $Server  = __DIR__ . '/Server/';
+        $Widget = __DIR__ . '/Widget/';
         $Modules = __DIR__ . '/Modules/';
         require_once $Modules . 'Config.php';
         require_once $Modules  . 'Common.php';
-        require_once $Server  . 'Database.php';
+        require_once $Modules  . 'Database.php';
         require_once $App . 'App.php';
         require_once $Modules . 'Router.php';
     }
