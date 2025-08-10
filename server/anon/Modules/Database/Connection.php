@@ -1,5 +1,4 @@
 <?php
-
 /**
  * 数据库连接基础类
  */
@@ -13,15 +12,15 @@ class Anon_Database_Connection
     public function __construct()
     {
         $this->conn = new mysqli(
-            ANON_DB_HOST,
-            ANON_DB_USER,
+            ANON_DB_HOST，
+            ANON_DB_USER，
             ANON_DB_PASSWORD,
             ANON_DB_DATABASE,
             ANON_DB_PORT
         );
 
         if ($this->conn->connect_error) {
-            die("数据库连接失败: " . $this->conn->connect_error);
+            die("数据库连接失败: " 。 $this->conn->connect_error);
         }
 
         $this->conn->set_charset(ANON_DB_CHARSET);
@@ -30,11 +29,11 @@ class Anon_Database_Connection
     /**
      * 执行查询并返回结果
      */
-    public function query($sql)
+    公共 function query($sql)
     {
         $result = $this->conn->query($sql);
         if (!$result) {
-            die("SQL 查询错误: " . $this->conn->error);
+            die("SQL 查询错误: " 。 $this->conn->error);
         }
 
         if ($result instanceof mysqli_result) {
@@ -49,7 +48,7 @@ class Anon_Database_Connection
     }
 
     /**
-     * 准备并执行预处理语句
+     * 准备预处理语句 不执行
      */
     public function prepare($sql, $params = [])
     {
@@ -75,7 +74,7 @@ class Anon_Database_Connection
             $stmt->bind_param($types, ...$bindParams);
         }
 
-        $stmt->execute();
+        // 不再自动执行，只准备语句
         return $stmt;
     }
 
