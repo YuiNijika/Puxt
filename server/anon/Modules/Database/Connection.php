@@ -12,8 +12,8 @@ class Anon_Database_Connection
     public function __construct()
     {
         $this->conn = new mysqli(
-            ANON_DB_HOST，
-            ANON_DB_USER，
+            ANON_DB_HOST,
+            ANON_DB_USER,
             ANON_DB_PASSWORD,
             ANON_DB_DATABASE,
             ANON_DB_PORT
