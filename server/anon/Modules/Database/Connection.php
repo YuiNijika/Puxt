@@ -20,7 +20,7 @@ class Anon_Database_Connection
         );
 
         if ($this->conn->connect_error) {
-            die("数据库连接失败: " 。 $this->conn->connect_error);
+            die("数据库连接失败: " . $this->conn->connect_error);
         }
 
         $this->conn->set_charset(ANON_DB_CHARSET);
@@ -29,11 +29,11 @@ class Anon_Database_Connection
     /**
      * 执行查询并返回结果
      */
-    公共 function query($sql)
+    public function query($sql)
     {
         $result = $this->conn->query($sql);
         if (!$result) {
-            die("SQL 查询错误: " 。 $this->conn->error);
+            die("SQL 查询错误: " . $this->conn->error);
         }
 
         if ($result instanceof mysqli_result) {
