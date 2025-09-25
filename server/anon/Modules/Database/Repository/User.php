@@ -25,18 +25,19 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     {
         $sql = "SELECT * FROM " . ANON_DB_PREFIX . "users WHERE uid = ?";
         $stmt = $this->prepare($sql, [$uid]);
-        $stmt->store_result();
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($userId, $name, $password, $email, $group);
-            $stmt->fetch();
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
             $stmt->close();
+
             return [
-                'uid' => $userId,
-                'name' => $name,
-                'email' => $email,
-                'avatar' => $this->avatarService->getAvatar($email),
-                'group' => $group,
+                'uid' => $user['uid'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'avatar' => $this->avatarService->getAvatar($user['email']),
+                'group' => $user['group'],
             ];
         }
 
@@ -53,13 +54,13 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
      */
     public function isUserInGroup($uid, $group)
     {
-        $sql = "SELECT COUNT(*) FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = ?";
+        $sql = "SELECT COUNT(*) as count FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = ?";
         $stmt = $this->prepare($sql, [$uid, $group]);
-        $stmt->store_result();
-        $stmt->bind_result($count);
-        $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         $stmt->close();
-        return $count > 0;
+        return $row['count'] > 0;
     }
 
     /**
@@ -70,13 +71,13 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
      */
     public function isUserAdmin($uid)
     {
-        $sql = "SELECT COUNT(*) FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = 'admin'";
+        $sql = "SELECT COUNT(*) as count FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = 'admin'";
         $stmt = $this->prepare($sql, [$uid]);
-        $stmt->store_result();
-        $stmt->bind_result($count);
-        $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         $stmt->close();
-        return $count > 0;
+        return $row['count'] > 0;
     }
 
     /**
@@ -87,13 +88,13 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
      */
     public function isUserAuthor($uid)
     {
-        $sql = "SELECT COUNT(*) FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = 'author'";
+        $sql = "SELECT COUNT(*) as count FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` = 'author'";
         $stmt = $this->prepare($sql, [$uid]);
-        $stmt->store_result();
-        $stmt->bind_result($count);
-        $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         $stmt->close();
-        return $count > 0;
+        return $row['count'] > 0;
     }
 
     /**
@@ -104,13 +105,13 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
      */
     public function hasContentManagementPermission($uid)
     {
-        $sql = "SELECT COUNT(*) FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` IN ('admin', 'author')";
+        $sql = "SELECT COUNT(*) as count FROM " . ANON_DB_PREFIX . "users WHERE uid = ? AND `group` IN ('admin', 'author')";
         $stmt = $this->prepare($sql, [$uid]);
-        $stmt->store_result();
-        $stmt->bind_result($count);
-        $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         $stmt->close();
-        return $count > 0;
+        return $row['count'] > 0;
     }
 
     /**
@@ -123,14 +124,14 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     {
         $sql = "SELECT `group` FROM " . ANON_DB_PREFIX . "users WHERE uid = ?";
         $stmt = $this->prepare($sql, [$uid]);
-        $stmt->store_result();
-        
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($group);
-            $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
             $stmt->close();
-            
-            switch ($group) {
+
+            switch ($user['group']) {
                 case 'admin':
                     return 2;
                 case 'author':
@@ -139,7 +140,7 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
                     return 0;
             }
         }
-        
+
         $stmt->close();
         return 0;
     }
@@ -153,20 +154,19 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     {
         $sql = "SELECT uid, name, password, email, `group` FROM " . ANON_DB_PREFIX . "users WHERE name = ?";
         $stmt = $this->prepare($sql, [$name]);
-        $stmt->store_result();
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($uid, $name, $password, $email, $group);
-            $stmt->fetch();
-            $result = [
-                'uid' => $uid,
-                'name' => $name,
-                'password' => $password,
-                'email' => $email,
-                'group' => $group
-            ];
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
             $stmt->close();
-            return $result;
+            return [
+                'uid' => $user['uid'],
+                'name' => $user['name'],
+                'password' => $user['password'],
+                'email' => $user['email'],
+                'group' => $user['group']
+            ];
         }
 
         $stmt->close();
@@ -296,18 +296,19 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     }
 
     /**
-     * 检查邮箱是否已存在
+     * 检查邮箱是否已被注册
+     * 
      * @param string $email 邮箱
      * @return bool 返回邮箱是否已存在
      */
     public function isEmailExists($email)
     {
-        $sql = "SELECT COUNT(*) FROM " . ANON_DB_PREFIX . "users WHERE email = ?";
+        $sql = "SELECT COUNT(*) as count FROM " . ANON_DB_PREFIX . "users WHERE email = ?";
         $stmt = $this->prepare($sql, [$email]);
-        $stmt->store_result();
-        $stmt->bind_result($count);
-        $stmt->fetch();
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         $stmt->close();
-        return $count > 0;
+        return $row['count'] > 0;
     }
 }
