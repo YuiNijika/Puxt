@@ -1,11 +1,13 @@
 <?php
 if (!defined('ANON_ALLOWED_ACCESS')) exit;
 
-if (strpos($_SERVER['REQUEST_URI'], '/anon/install') === false) {
-    if (!Anon_Config::isInstalled()) {
-        header('Location: /anon/install');
-        exit;
-    }
+// 检查安装状态并重定向到安装页面
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$isInstallRoute = (strpos($requestUri, '/install') !== false || strpos($requestUri, '/anon') !== false);
+
+if (!$isInstallRoute && !Anon_Config::isInstalled()) {
+    header('Location: /anon/install');
+    exit;
 }
 
 class Anon_Common
@@ -13,13 +15,31 @@ class Anon_Common
     /**
      * 通用Header
      */
-    public static function Header(): void
+    public static function Header($code = 200, $response = true): void
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization");
-        header('Content-Type: application/json');
+        http_response_code($code);
+        if ($response) {
+            header("Access-Control-Allow-Origin: *");
+            header("Access-Control-Allow-Methods: *");
+            header("Access-Control-Allow-Headers: Content-Type, Authorization");
+            header('Content-Type: application/json; charset=utf-8');
+        }
     }
+
+    /**
+     * 系统信息
+     */
+    public static function SystemInfo(): array
+    {
+        return [
+            'PHP_VERSION' => PHP_VERSION,
+            'SERVER_SOFTWARE' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+            'SERVER_NAME' => $_SERVER['SERVER_NAME'] ?? 'Unknown',
+            'SERVER_PORT' => $_SERVER['SERVER_PORT'] ?? 'Unknown',
+            'SERVER_PROTOCOL' => $_SERVER['SERVER_PROTOCOL'] ?? 'Unknown',
+        ];
+    }
+
     /**
      * 获取客户端真实IP
      * @return string
@@ -56,21 +76,6 @@ class Anon_Common
 
         // 所有来源都找不到有效IP时返回默认值
         return null;
-    }
-}
-
-class Anon_Component
-{
-    public static function View(string $fileView): void
-    {
-        // 使用更可靠的路径构建方式
-        $filePath = realpath(__DIR__ . '/../../app/Components/' . $fileView . '.php');
-
-        if (!$filePath || !file_exists($filePath)) {
-            throw new RuntimeException("Components view file not found: {$fileView}");
-        }
-
-        require $filePath;
     }
 }
 

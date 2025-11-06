@@ -10,27 +10,14 @@ try {
 
     // 只处理GET请求
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => '请求方法不被允许']);
-        exit;
+        Anon_ResponseHelper::methodNotAllowed('GET');
     }
 
     if ($userInfo) {
-        echo json_encode([
-            'success' => true,
-            'data' => $userInfo
-        ]);
-        exit;
+        Anon_ResponseHelper::success($userInfo, '获取用户信息成功');
     }
 
-    echo json_encode([
-        'success' => true,
-        'userInfo' => null
-    ]);
+    Anon_ResponseHelper::success(['userInfo' => null], '用户信息为空');
 } catch (Exception $e) {
-    error_log('检查登录状态错误: ' . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => '获取用户信息发生错误'
-    ]);
+    Anon_ResponseHelper::handleException($e, '获取用户信息发生错误');
 }

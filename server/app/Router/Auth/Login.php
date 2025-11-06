@@ -6,9 +6,7 @@ Anon_Common::Header();
 try {
     // 只处理POST请求
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => '请求方法不被允许']);
-        exit;
+        Anon_ResponseHelper::methodNotAllowed('POST');
     }
 
     // 获取POST数据
@@ -26,8 +24,7 @@ try {
 
     // 验证输入
     if (empty($username) || empty($password)) {
-        echo json_encode(['success' => false, 'message' => '用户名和密码均不能为空']);
-        exit;
+        Anon_ResponseHelper::validationError('用户名和密码均不能为空');
     }
 
     // 创建数据库实例
@@ -38,14 +35,12 @@ try {
     
     // 如果用户不存在
     if (!$user) {
-        echo json_encode(['success' => false, 'message' => '用户名或密码错误']);
-        exit;
+        Anon_ResponseHelper::error('用户名或密码错误', null, 401);
     }
 
     // 验证密码
     if (!password_verify($password, $user['password'])) {
-        echo json_encode(['success' => false, 'message' => '用户名或密码错误']);
-        exit;
+        Anon_ResponseHelper::error('用户名或密码错误', null, 401);
     }
 
     // 登录成功，重置会话ID以防会话固定攻击
@@ -63,17 +58,13 @@ try {
     Anon_Check::setAuthCookies((int)$user['uid'], $user['name'], $rememberMe);
 
     // 返回成功响应
-    echo json_encode([
-        'success' => true,
-        'message' => '登录成功',
-        'data' => [
-            'user_id' => (int)$user['uid'],
-            'username' => $user['name'],
-            'email' => $user['email']
-        ]
-    ]);
+    $userData = [
+        'user_id' => (int)$user['uid'],
+        'username' => $user['name'],
+        'email' => $user['email']
+    ];
+    Anon_ResponseHelper::success($userData, '登录成功');
     
 } catch (Exception $e) {
-    error_log('登录处理错误: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => '登录处理过程中发生错误']);
+    Anon_ResponseHelper::handleException($e, '登录处理过程中发生错误');
 }

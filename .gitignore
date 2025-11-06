@@ -1,3 +1,6 @@
+# 安装锁文件
+server/anon/Modules/Install/installed.lock
+
 # Logs
 logs
 *.log

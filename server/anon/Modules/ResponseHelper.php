@@ -1,0 +1,172 @@
+<?php
+if (!defined('ANON_ALLOWED_ACCESS')) exit;
+
+/**
+ * 统一JSON响应格式助手类
+ * 提供标准化的API响应格式：success、message、data
+ */
+class Anon_ResponseHelper {
+    
+    /**
+     * 发送成功响应
+     * @param mixed $data 响应数据
+     * @param string $message 响应消息
+     * @param int $httpCode HTTP状态码，默认200
+     */
+    public static function success($data = null, $message = '操作成功', $httpCode = 200) {
+        http_response_code($httpCode);
+        
+        $response = [
+            'success' => true,
+            'message' => $message
+        ];
+        
+        // 只有当data不为null时才添加data字段
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    /**
+     * 发送失败响应
+     * @param string $message 错误消息
+     * @param mixed $data 额外的错误数据（可选）
+     * @param int $httpCode HTTP状态码，默认400
+     */
+    public static function error($message = '操作失败', $data = null, $httpCode = 400) {
+        http_response_code($httpCode);
+        
+        $response = [
+            'success' => false,
+            'message' => $message
+        ];
+        
+        // 只有当data不为null时才添加data字段
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    /**
+     * 发送分页数据响应
+     * @param array $data 数据列表
+     * @param array $pagination 分页信息
+     * @param string $message 响应消息
+     * @param int $httpCode HTTP状态码，默认200
+     */
+    public static function paginated($data, $pagination, $message = '获取数据成功', $httpCode = 200) {
+        http_response_code($httpCode);
+        
+        $response = [
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+            'pagination' => $pagination
+        ];
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    /**
+     * 发送方法不允许响应
+     * @param string $allowedMethods 允许的方法列表
+     */
+    public static function methodNotAllowed($allowedMethods = '') {
+        $message = '请求方法不被允许';
+        if (!empty($allowedMethods)) {
+            $message .= '，允许的方法：' . $allowedMethods;
+        }
+        self::error($message, null, 405);
+    }
+    
+    /**
+     * 发送参数验证失败响应
+     * @param string $message 验证失败消息
+     * @param array $errors 具体的验证错误（可选）
+     */
+    public static function validationError($message = '参数验证失败', $errors = null) {
+        self::error($message, $errors, 422);
+    }
+    
+    /**
+     * 发送未授权响应
+     * @param string $message 未授权消息
+     */
+    public static function unauthorized($message = '未授权访问') {
+        self::error($message, null, 401);
+    }
+    
+    /**
+     * 发送禁止访问响应
+     * @param string $message 禁止访问消息
+     */
+    public static function forbidden($message = '禁止访问') {
+        self::error($message, null, 403);
+    }
+    
+    /**
+     * 发送资源未找到响应
+     * @param string $message 未找到消息
+     */
+    public static function notFound($message = '资源未找到') {
+        self::error($message, null, 404);
+    }
+    
+    /**
+     * 发送服务器内部错误响应
+     * @param string $message 错误消息
+     * @param mixed $data 错误详情（开发环境可用）
+     */
+    public static function serverError($message = '服务器内部错误', $data = null) {
+        // 记录错误日志
+        if ($data !== null) {
+            error_log('Server Error: ' . $message . ' - Data: ' . json_encode($data));
+        } else {
+            error_log('Server Error: ' . $message);
+        }
+        
+        // 生产环境不返回具体错误信息
+        $isDevelopment = defined('ANON_DEBUG') && ANON_DEBUG;
+        $responseData = $isDevelopment ? $data : null;
+        
+        self::error($message, $responseData, 500);
+    }
+    
+    /**
+     * 处理异常并发送错误响应
+     * @param Exception $exception 异常对象
+     * @param string $customMessage 自定义错误消息（可选）
+     */
+    public static function handleException($exception, $customMessage = null) {
+        $message = $customMessage ?: $exception->getMessage();
+        
+        // 记录异常日志
+        error_log('Exception handled: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ':' . $exception->getLine());
+        
+        // 根据异常类型返回不同的HTTP状态码
+        $httpCode = 500;
+        if ($exception instanceof InvalidArgumentException) {
+            $httpCode = 400;
+        } elseif ($exception instanceof UnauthorizedAccessException) {
+            $httpCode = 401;
+        } elseif ($exception instanceof NotFoundException) {
+            $httpCode = 404;
+        }
+        
+        $isDevelopment = defined('ANON_DEBUG') && ANON_DEBUG;
+        $data = $isDevelopment ? [
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+            'trace' => $exception->getTraceAsString()
+        ] : null;
+        
+        self::error($message, $data, $httpCode);
+    }
+}

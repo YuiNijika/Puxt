@@ -23,7 +23,9 @@ class Anon_Config
      */
     public static function addRoute(string $path, callable $handler)
     {
-        self::$routerConfig['routes'][$path] = $handler;
+        // 规范化路由键，确保以 / 开头，避免匹配失败
+        $normalized = (strpos($path, '/') === 0) ? $path : '/' . $path;
+        self::$routerConfig['routes'][$normalized] = $handler;
     }
 
     /**
@@ -55,8 +57,62 @@ class Anon_Config
         if (!defined('ANON_INSTALLED')) {
             return false;
         }
-        $lockFile = __DIR__. '/../../app/Install/installed.lock';
+        $lockFile = __DIR__ . '/Install/installed.lock';
 
         return ANON_INSTALLED && file_exists($lockFile);
+    }
+
+    /**
+     * 初始化系统路由
+     */
+    public static function initSystemRoutes()
+    {
+        // 调试输出路由注册信息
+        if (defined('ANON_DEBUG') && ANON_DEBUG) {
+            error_log("Registering system routes...");
+        }
+        
+        // 注册Common路由
+        self::addRoute('/anon/common/system-info', function() {
+            Anon_Common::Header();
+            echo json_encode(Anon_Common::SystemInfo());
+        });
+        self::addRoute('/anon/common/get-client-ip', function() {
+            Anon_Common::Header();
+            echo json_encode(Anon_Common::GetClientIp());
+        });
+
+        // 注册Debug路由
+        self::addRoute('/anon/debug/info', [Anon_Debug::class, 'debugInfo']);
+        self::addRoute('/anon/debug/performance', [Anon_Debug::class, 'performanceApi']);
+        self::addRoute('/anon/debug/logs', [Anon_Debug::class, 'logs']);
+        self::addRoute('/anon/debug/errors', [Anon_Debug::class, 'errors']);
+        self::addRoute('/anon/debug/hooks', [Anon_Debug::class, 'hooks']);
+        self::addRoute('/anon/debug/tools', [Anon_Debug::class, 'tools']);
+        self::addRoute('/anon/debug/clear', [Anon_Debug::class, 'clearData']);
+        self::addRoute('/anon/debug/console', [Anon_Debug::class, 'console']);
+
+        // 注册Install路由
+        self::addRoute('/anon/install', [Anon_Install::class, 'index']);
+        // 注册anon路由
+        self::addRoute('/anon', function() {
+            // 检查系统是否已安装
+            if (self::isInstalled()) {
+                Anon_Common::Header(403);
+                echo json_encode([
+                    'code' => 403,
+                    'message' => 'Forbidden'
+                ]);
+                exit;
+            } else {
+                // 如果未安装，调用安装类
+                Anon_Install::index();
+            }
+        });
+        
+        // 调试输出已注册的路由
+        if (defined('ANON_DEBUG') && ANON_DEBUG) {
+            error_log("Registered routes: " . json_encode(array_keys(self::$routerConfig['routes'])));
+        }
     }
 }
