@@ -4,8 +4,8 @@ if (!defined('ANON_ALLOWED_ACCESS')) exit;
 
 class Anon_Install
 {
-    const sqlfile = __DIR__ . '/install.sql';
-    const lockfile = __DIR__ . '/install.lock';
+    const sqlfile = __DIR__ . '/Install.sql';
+    const lockfile = __DIR__ . '/Install.lock';
     const envfile = __DIR__ . '/../../../env.php';
     /**
      * 读取 SQL 文件内容
