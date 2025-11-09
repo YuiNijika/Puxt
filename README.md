@@ -1,5 +1,3 @@
-# PHP + Nuxt = Puxt
-
 ## 快速开始
 
 ```php
