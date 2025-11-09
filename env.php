@@ -14,9 +14,9 @@ define('ANON_DB_DATABASE', 'puxt');
 define('ANON_DB_CHARSET', 'utf8mb4');
 
 // 是否安装程序
-define('ANON_INSTALLED', false);
+define('ANON_INSTALLED', true);
 // Debug
-define('ANON_ROUTER_DEBUG', false);
+define('ANON_ROUTER_DEBUG', true);
 
 // 站点配置
 $AnonSite = [

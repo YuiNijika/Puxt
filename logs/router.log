@@ -1,0 +1,2 @@
+[2025-11-06 16:04:00] [ERROR] Route execution failed [/anon/common/system-info]: Anon_Common::SystemInfo(): Return value must be of type array, none returned in D:\Code\Puxt\server\anon\Modules\Common.php on line 38
+[2025-11-06 16:16:03] [ERROR] Route execution failed [/anon/common/headers]: Call to undefined method Anon_Common::Headers() in D:\Code\Puxt\server\anon\Modules\Config.php on line 86
