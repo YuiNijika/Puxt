@@ -53,13 +53,7 @@ class Anon_Config
      */
     public static function isInstalled(): bool
     {
-        // 确保常量已定义
-        if (!defined('ANON_INSTALLED')) {
-            return false;
-        }
-        $lockFile = __DIR__ . '/Install/installed.lock';
-
-        return ANON_INSTALLED && file_exists($lockFile);
+        return ANON_INSTALLED;
     }
 
     /**
