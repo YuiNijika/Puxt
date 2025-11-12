@@ -16,14 +16,15 @@ class Anon_Main
         // 加载核心模块
         require_once $Modules . 'Config.php';
         require_once $Modules  . 'Common.php';
-        require_once $Widget  . 'Database.php';
+        require_once $Widget  . 'Connection.php';
+        require_once $Modules  . 'Database.php';
         require_once $Modules  . 'ResponseHelper.php';
         
         // 加载调试系统
         require_once $Modules . 'Debug.php';
         
         // 加载模块类
-        require_once $Modules . 'Install/Install.php';
+        require_once $Modules . '../Install/Install.php';
         
         // 初始化调试系统
         Anon_Debug::init();

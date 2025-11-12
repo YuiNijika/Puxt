@@ -1,0 +1,170 @@
+<?php
+
+if (!defined('ANON_ALLOWED_ACCESS')) exit;
+
+const DatabaseDir = __DIR__ . '/../../app/Database';
+
+/**
+ * 递归引入 Database
+ */
+function anon_require_all_database_files($baseDir)
+{
+    $connectionFile = realpath($baseDir . '/Connection.php');
+    foreach (glob($baseDir . '/*.php') as $phpFile) {
+        if (realpath($phpFile) !== $connectionFile) {
+            require_once $phpFile;
+        }
+    }
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($baseDir, FilesystemIterator::SKIP_DOTS)
+    );
+    foreach ($it as $fileInfo) {
+        if ($fileInfo->isFile() && strtolower($fileInfo->getExtension()) === 'php') {
+            $path = $fileInfo->getPathname();
+            if (realpath($path) !== $connectionFile) {
+                require_once $path;
+            }
+        }
+    }
+}
+
+anon_require_all_database_files(DatabaseDir);
+
+class Anon_Database
+{
+    /**
+     * 动态实例容器（包含 Repository/Service 实例）
+     * 不再使用固定 private 属性
+     */
+    protected $instances = [];
+
+    /**
+     * 构造函数自动发现并实例化所有仓库与服务类
+     */
+    public function __construct()
+    {
+        $this->bootstrapInstances();
+    }
+
+    /**
+     * 自动发现并实例化匹配类Anon_Database_*Repository / *Service
+     */
+    protected function bootstrapInstances()
+    {
+        foreach (get_declared_classes() as $class) {
+            if (preg_match('/^Anon_Database_([A-Za-z0-9_]+)(Repository|Service)$/', $class, $m)) {
+                // 避免重复实例化
+                if (!isset($this->instances[$class])) {
+                    $obj = new $class();
+                    $this->instances[$class] = $obj;
+                    // 兼容不同访问方式的键名
+                    $short = $m[1] . $m[2];           // e.g. UserRepository
+                    $camel = lcfirst($short);         // e.g. userRepository
+                    $this->instances[$short] = $obj;
+                    $this->instances[$camel] = $obj;
+                }
+            }
+        }
+    }
+
+    /**
+     * 直接访问 QueryBuilder 的入口
+     */
+    public function db($table)
+    {
+        return (new Anon_Database_Connection())->db($table);
+    }
+
+    /**
+     * 执行查询并返回结果
+     */
+    public function query($sql)
+    {
+        return (new Anon_Database_Connection())->query($sql);
+    }
+
+    /**
+     * 准备并返回预处理语句对象
+     */
+    public function prepare($sql, $params = [])
+    {
+        return (new Anon_Database_Connection())->prepare($sql);
+    }
+
+    /**
+     * 动态属性访问（兼容访问 userRepository / avatarService 等）
+     */
+    public function __get($name)
+    {
+        return $this->instances[$name] ?? null;
+    }
+
+    public function __isset($name)
+    {
+        return isset($this->instances[$name]);
+    }
+
+    /**
+     * 动态方法转发：自动导出仓库与服务的方法
+     * - 保持现有显式方法兼容（已移除显式导出，不再需要）
+     * - 新增方法无需在此类重复导出
+     */
+    public function __call($name, $arguments)
+    {
+        $target = $this->resolveForwardTarget($name);
+        if ($target && method_exists($target, $name)) {
+            return call_user_func_array([$target, $name], $arguments);
+        }
+        // 回退：遍历已发现的所有实例，若存在同名方法则调用
+        foreach ($this->uniqueInstances() as $repo) {
+            if ($repo && method_exists($repo, $name)) {
+                return call_user_func_array([$repo, $name], $arguments);
+            }
+        }
+        throw new BadMethodCallException("方法 '" . $name . "' 不存在于 Anon_Database 或其仓库/服务中");
+    }
+
+    /**
+     * 根据方法名前缀解析目标仓库或服务
+     */
+    private function resolveForwardTarget($method)
+    {
+        // 根据方法名前缀解析目标（如 getUser -> UserRepository / UserService）
+        if (preg_match('/^(get|is|add|update|delete)([A-Z][A-Za-z0-9_]*)/', $method, $m)) {
+            $subject = $m[2];
+            $candidates = [
+                $subject . 'Repository',
+                lcfirst($subject . 'Repository'),
+                'Anon_Database_' . $subject . 'Repository',
+                $subject . 'Service',
+                lcfirst($subject . 'Service'),
+                'Anon_Database_' . $subject . 'Service',
+            ];
+            foreach ($candidates as $key) {
+                if (isset($this->instances[$key])) {
+                    return $this->instances[$key];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 返回唯一实例列表（去重）
+     */
+    protected function uniqueInstances()
+    {
+        $seen = [];
+        $uniq = [];
+        foreach ($this->instances as $obj) {
+            if (is_object($obj)) {
+                $hash = spl_object_hash($obj);
+                if (!isset($seen[$hash])) {
+                    $seen[$hash] = true;
+                    $uniq[] = $obj;
+                }
+            }
+        }
+        return $uniq;
+    }
+}

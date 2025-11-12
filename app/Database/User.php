@@ -8,12 +8,9 @@ if (!defined('ANON_ALLOWED_ACCESS')) exit;
 
 class Anon_Database_UserRepository extends Anon_Database_Connection
 {
-    protected $avatarService;
-
     public function __construct()
     {
         parent::__construct();
-        $this->avatarService = new Anon_Database_AvatarService();
     }
 
     /**
@@ -24,7 +21,7 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     public function getUserInfo($uid)
     {
         $row = $this->db('users')
-            ->select(['uid','name','email','`group`'])
+            ->select(['uid', 'name', 'email', '`group`'])
             ->where('uid', '=', (int)$uid)
             ->first();
 
@@ -33,7 +30,7 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
             'uid' => $row['uid'],
             'name' => $row['name'],
             'email' => $row['email'],
-            'avatar' => $this->avatarService->getAvatar($row['email']),
+            'avatar' => $this->buildAvatar($row['email']),
             'group' => $row['group'],
         ];
     }
@@ -113,9 +110,12 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
             ->first();
         if (!$row) return 0;
         switch ($row['group']) {
-            case 'admin': return 2;
-            case 'author': return 1;
-            default: return 0;
+            case 'admin':
+                return 2;
+            case 'author':
+                return 1;
+            default:
+                return 0;
         }
     }
 
@@ -127,7 +127,7 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
     public function getUserInfoByName($name)
     {
         $row = $this->db('users')
-            ->select(['uid','name','password','email','`group`'])
+            ->select(['uid', 'name', 'password', 'email', '`group`'])
             ->where('name', '=', $name)
             ->first();
         if (!$row) return false;
@@ -244,5 +244,15 @@ class Anon_Database_UserRepository extends Anon_Database_Connection
             ->exists()
             ->where('email', '=', $email)
             ->scalar();
+    }
+
+    private function buildAvatar($email = null, $size = 640)
+    {
+        if (!$email) {
+            return "https://www.cravatar.cn/avatar/?s={$size}&d=retro";
+        }
+        $trimmedEmail = trim(strtolower($email));
+        $hash = md5($trimmedEmail);
+        return "https://www.cravatar.cn/avatar/{$hash}?s={$size}&d=retro";
     }
 }

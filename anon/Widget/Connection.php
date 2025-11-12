@@ -1,9 +1,4 @@
 <?php
-
-/**
- * 数据库连接基础类
- */
-
 if (!defined('ANON_ALLOWED_ACCESS')) exit;
 
 class Anon_Database_Connection
@@ -27,9 +22,6 @@ class Anon_Database_Connection
         $this->conn->set_charset(ANON_DB_CHARSET);
     }
 
-    /**
-     * 执行查询并返回结果
-     */
     public function query($sql)
     {
         $result = $this->conn->query($sql);
@@ -48,9 +40,6 @@ class Anon_Database_Connection
         return $this->conn->affected_rows;
     }
 
-    /**
-     * 准备预处理语句 不执行
-     */
     public function prepare($sql, $params = [])
     {
         $stmt = $this->conn->prepare($sql);
@@ -61,7 +50,6 @@ class Anon_Database_Connection
         if (!empty($params)) {
             $types = '';
             $bindParams = [];
-
             foreach ($params as $param) {
                 if (is_null($param)) {
                     $types .= 's';
@@ -71,17 +59,11 @@ class Anon_Database_Connection
                     $bindParams[] = $param;
                 }
             }
-
             $stmt->bind_param($types, ...$bindParams);
         }
-
-        // 不再自动执行，只准备语句
         return $stmt;
     }
 
-    /**
-     * 获取查询构建器实例
-     */
     public function db($table)
     {
         return new Anon_Database_QueryBuilder($this->conn, ANON_DB_PREFIX . $table);
@@ -107,44 +89,52 @@ class Anon_Database_QueryBuilder
     private $order = [];
     private $limit = null;
     private $offset = null;
+
     public function __construct(mysqli $conn, $table)
     {
         $this->conn = $conn;
         $this->table = $table;
     }
+
     public function select($cols = ['*'])
     {
         $this->type = 'select';
         $this->columns = is_array($cols) ? $cols : [$cols];
         return $this;
     }
+
     public function insert(array $data)
     {
         $this->type = 'insert';
         $this->data = $data;
         return $this;
     }
+
     public function update(array $data)
     {
         $this->type = 'update';
         $this->data = $data;
         return $this;
     }
+
     public function delete()
     {
         $this->type = 'delete';
         return $this;
     }
+
     public function count()
     {
         $this->type = 'count';
         return $this;
     }
+
     public function exists()
     {
         $this->type = 'exists';
         return $this;
     }
+
     public function where($col, $op, $val = null)
     {
         if ($val === null) {
@@ -158,33 +148,39 @@ class Anon_Database_QueryBuilder
         }
         return $this;
     }
+
     public function whereIn($col, array $vals)
     {
         $this->where[] = [$col, 'IN', $vals];
         return $this;
     }
+
     public function orderBy($col, $dir = 'ASC')
     {
         $this->order[] = [$col, strtoupper($dir) === 'DESC' ? 'DESC' : 'ASC'];
         return $this;
     }
+
     public function limit($limit, $offset = null)
     {
         $this->limit = (int)$limit;
         $this->offset = $offset !== null ? (int)$offset : null;
         return $this;
     }
+
     public function join($table, $on, $type = 'INNER')
     {
         $this->joins[] = [ANON_DB_PREFIX . $table, $on, strtoupper($type)];
         return $this;
     }
+
     private function t($v)
     {
         if (is_int($v)) return 'i';
         if (is_float($v)) return 'd';
         return 's';
     }
+
     private function build()
     {
         $sql = '';
@@ -259,6 +255,7 @@ class Anon_Database_QueryBuilder
         }
         return [$sql, $p, $ty];
     }
+
     private function stmt()
     {
         [$sql, $p, $ty] = $this->build();
@@ -269,6 +266,7 @@ class Anon_Database_QueryBuilder
         }
         return $st;
     }
+
     public function get()
     {
         $st = $this->stmt();
@@ -281,12 +279,14 @@ class Anon_Database_QueryBuilder
         $st->close();
         return $rows;
     }
+
     public function first()
     {
         $this->limit(1);
         $rows = $this->get();
         return $rows[0] ?? null;
     }
+
     public function scalar()
     {
         if ($this->type === 'count') {
@@ -308,6 +308,7 @@ class Anon_Database_QueryBuilder
         }
         return null;
     }
+
     public function execute()
     {
         $st = $this->stmt();
@@ -318,3 +319,4 @@ class Anon_Database_QueryBuilder
         return $this->type === 'insert' ? $id : $aff;
     }
 }
+
