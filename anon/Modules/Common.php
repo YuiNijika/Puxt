@@ -1,11 +1,7 @@
 <?php
 if (!defined('ANON_ALLOWED_ACCESS')) exit;
 
-// 检查安装状态并重定向到安装页面
-$requestUri = $_SERVER['REQUEST_URI'] ?? '';
-$isInstallRoute = (strpos($requestUri, '/install') !== false || strpos($requestUri, '/anon') !== false);
-
-if (!$isInstallRoute && !Anon_Config::isInstalled()) {
+if (!Anon_Config::isInstalled()) {
     header('Location: /anon/install');
     exit;
 }
