@@ -54,7 +54,6 @@ try {
     $_SESSION['username'] = $user['name'];
 
     // 设置认证Cookie
-    global $AnonSite;
     Anon_Check::setAuthCookies((int)$user['uid'], $user['name'], $rememberMe);
 
     // 返回成功响应

@@ -143,12 +143,10 @@ class Anon_Check
      */
     public static function setAuthCookies(int $userId, string $username, bool $rememberMe = false): void
     {
-        global $AnonSite;
-
         $cookieOptions = [
             'path'     => '/',
             'httponly' => true,
-            'secure'   => $AnonSite['HTTPS'] ?? false,
+            'secure'   => AnonSite['HTTPS'] ?? false,
             'samesite' => 'Lax'
         ];
 
@@ -170,13 +168,11 @@ class Anon_Check
      */
     private static function clearAuthCookies(): void
     {
-        global $AnonSite;
-
         $cookieOptions = [
             'expires'  => time() - 3600,
             'path'     => '/',
             'httponly' => true,
-            'secure'   => $AnonSite['HTTPS'] ?? false,
+            'secure'   => AnonSite['HTTPS'] ?? false,
             'samesite' => 'Lax'
         ];
 

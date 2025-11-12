@@ -17,9 +17,7 @@ define('ANON_DB_CHARSET', 'utf8mb4');
 define('ANON_INSTALLED', true);
 // Debug
 define('ANON_ROUTER_DEBUG', true);
-
-// 站点配置
-$AnonSite = [
+const AnonSite = [
     'HTTPS' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
 ];
 
